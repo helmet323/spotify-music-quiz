@@ -1,24 +1,11 @@
+import { getSpotifyAuthUrl } from "../../../lib/spotify";
+import { successResponse, errorResponse } from "../../../lib/commons";
+
 export async function GET() {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
-  const scopes = ["user-read-email", "user-read-private"].join(" ");
-
-  if (!clientId || !redirectUri) {
-    return new Response(
-      JSON.stringify({ error: "Missing Spotify env variables" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+  try {
+    const authUrl = getSpotifyAuthUrl();
+    return successResponse({ authUrl });
+  } catch (err) {
+    return errorResponse(err.message, 500);
   }
-
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(
-    scopes
-  )}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-  return new Response(JSON.stringify({ authUrl }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
 }

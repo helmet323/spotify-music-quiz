@@ -1,37 +1,31 @@
-import { neon } from "@neondatabase/serverless";
+import { getSpotifyAccessToken } from "../../../lib/spotify";
+import { parse } from "cookie";
+import { errorResponse } from "../../../lib/commons";
 
-const sql = neon(process.env.DATABASE_URL);
-
-export async function GET() {
+export async function GET(req) {
   try {
-    // Fetch first user from database (replace with session logic later)
-    const users = await sql`SELECT * FROM spotify_users LIMIT 1`;
-    if (!users.length) {
-      return new Response(
-        JSON.stringify({ success: false, error: "No user found" }),
-        { status: 404 }
-      );
-    }
+    const cookies = parse(req.headers.get("cookie") || "");
+    const spotify_id = cookies.spotify_user;
 
-    const { access_token } = users[0];
+    if (!spotify_id) return errorResponse("Not logged in", 401);
 
-    // Fetch user's playlists from Spotify
+    const token = await getSpotifyAccessToken(spotify_id);
+
     const res = await fetch(
       "https://api.spotify.com/v1/me/playlists?limit=10",
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    if (!res.ok) return errorResponse("Failed to fetch playlists", res.status);
 
     const data = await res.json();
 
-    // Map only necessary info for the frontend
     const playlists = data.items.map((pl) => ({
       id: pl.id,
       name: pl.name,
-      total_tracks: pl.tracks.total,
+      image: pl.images?.[0]?.url ?? null,
+      tracks: pl.tracks.total,
+      externalUrl: pl.external_urls.spotify,
     }));
 
     return new Response(JSON.stringify({ success: true, playlists }), {
@@ -39,9 +33,6 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ success: false, error: err.message }),
-      { status: 500 }
-    );
+    return errorResponse(err.message || "Internal server error", 500);
   }
 }

@@ -6,13 +6,13 @@ export default function Button({
   onClick,
   className = "",
   type = "button",
-  color = "green", // default color
+  color = "green",
   fullWidth = false,
 }) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async (e) => {
-    if (loading) return; // prevent double click
+    if (loading) return;
     setLoading(true);
     try {
       await onClick?.(e);
@@ -28,50 +28,22 @@ export default function Button({
     red: "bg-red-600 hover:bg-red-500 focus:ring-red-400",
   };
 
-  const selectedColor = colorClasses[color] || colorClasses.green;
-  const widthClass = fullWidth ? "w-full" : "inline-flex";
-
   return (
     <button
       type={type}
       onClick={handleClick}
       disabled={loading}
       className={`
-        ${widthClass} justify-center items-center px-6 py-3 rounded-lg font-semibold
-        shadow-md hover:shadow-lg transition-all duration-200
-        transform focus:outline-none focus:ring-2 focus:ring-offset-2
-        text-white ${selectedColor} ${
-        loading ? "opacity-70 cursor-not-allowed" : ""
-      } ${className}
+        ${fullWidth ? "w-full" : "inline-flex"} justify-center items-center
+        px-6 py-3 rounded-lg font-semibold shadow-md transition
+        focus:outline-none focus:ring-2 focus:ring-offset-2
+        text-white ${colorClasses[color] || colorClasses.green}
+        ${
+          loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+        } ${className}
       `}
     >
-      {loading ? (
-        <span className="flex items-center space-x-2">
-          <svg
-            className="animate-spin h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            ></path>
-          </svg>
-          <span>Loading...</span>
-        </span>
-      ) : (
-        children
-      )}
+      {loading ? "Loading..." : children}
     </button>
   );
 }
