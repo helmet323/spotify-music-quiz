@@ -147,11 +147,19 @@ export async function getSpotifyAccessToken(spotify_id) {
 export function getSpotifyAuthUrl() {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
-  const scopes = ["user-read-email", "user-read-private"].join(" ");
 
   if (!clientId || !redirectUri) {
     throw new Error("Missing Spotify env variables");
   }
+
+  // Updated scopes
+  const scopes = [
+    "user-read-email",
+    "user-read-private",
+    "streaming",
+    "user-read-playback-state",
+    "user-modify-playback-state",
+  ].join(" ");
 
   return `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(
     scopes
